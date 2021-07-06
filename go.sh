@@ -9,9 +9,11 @@ fi
 source .env
 
 SHIB_FILE_PATH="shibboleth-sp3/files/shib-keys"
+NODE_CERT_FILE_PATH="node-app/certs"
 if [[ $1 == "reset-certs" ]]; then
   rm nginx-shib/certs/*
   rm shibboleth-sp3/files/shib-keys/*
+  rm node-app/certs/*
 
 elif [[ $1 == "init" ]]; then
   mkdir -p $SHIB_FILE_PATH
@@ -42,6 +44,13 @@ elif [[ $1 == "init" ]]; then
     ./genSelfSignedCerts.sh $Domain_Name
     cd -
   fi
+
+  if [[ ! -f "${NODE_CERT_FILE_PATH}/keyfile.crt" ]]; then
+  mkdir -p $NODE_CERT_FILE_PATH
+    cd ${NODE_CERT_FILE_PATH}/..
+    ../nginx-shib/genSelfSignedCerts.sh $Domain_Name
+    cd -
+  fi
   echo "Done"
 
 elif [[ $1 == "build" ]]; then
@@ -59,13 +68,51 @@ elif [[ $1 == "reset" ]]; then
   docker-compose stop
   docker-compose rm -f
 
+
+# https://www.matteomattei.com/client-and-server-ssl-mutual-authentication-with-nodejs/
+elif [[ $1 == "tls" ]]; then 
+  set -x
+  mkdir tmp/certs -p
+  cd tmp/certs
+  openssl req -new -x509 -days 365 -keyout server-ca-key.pem -out server-ca-crt.pem -nodes \
+    -subj "/O=Cornell University - Dev/L=Ithaca/ST=NY/C=US/CN=ca.dev.local"
+
+  openssl genrsa -out server-key.pem 4096
+
+  openssl req -new -sha256 -key server-key.pem -out server-csr.pem -nodes \
+    -subj "/O=Cornell University - Dev/L=Ithaca/ST=NY/C=US/CN=dev.local"
+  openssl x509 -req -days 365 -in server-csr.pem -CA server-ca-crt.pem -CAkey server-ca-key.pem -CAcreateserial -out server-crt.pem
+  openssl verify -CAfile server-ca-crt.pem server-crt.pem
+
+  # CLIENT
+  openssl req -new -x509 -days 365 -keyout client-ca-key.pem -out client-ca-crt.pem -nodes \
+    -subj "/O=Cornell University - Dev/L=Ithaca/ST=NY/C=US/CN=ca.dev.local"
+
+  openssl genrsa -out client-key.pem 4096
+
+  openssl req -new -sha256 -key client-key.pem -out client-csr.pem -nodes \
+    -subj "/O=Cornell University - Dev/L=Ithaca/ST=NY/C=US/CN=dev.local"
+  openssl x509 -req -days 365 -in client-csr.pem -CA client-ca-crt.pem -CAkey client-ca-key.pem -CAcreateserial -out client-crt.pem
+  openssl verify -CAfile client-ca-crt.pem client-crt.pem
+
+  cp client-ca-crt.pem ../../node-app/certs/
+  cp client-key.pem ../../nginx-shib/certs
+  cp client-crt.pem ../../nginx-shib/certs
+
+  cp server-ca-crt.pem ../../nginx-shib/certs/
+  cp server-key.pem ../../node-app/certs
+  cp server-crt.pem ../../node-app/certs
+
+
+
+
 else
     echo "options: init, build, run, reset, reset-certs, clean"
 fi
-
 
 # Above command should generate these files
 # sp-encrypt-cert.pem
 # sp-encrypt-key.pem
 # sp-signing-cert.pem
 # sp-signing-key.pem
+# https://superuser.com/questions/226192/avoid-password-prompt-for-keys-and-prompts-for-dn-information

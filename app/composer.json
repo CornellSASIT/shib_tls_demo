@@ -4,5 +4,6 @@
     "minimum-stability": "dev",
     "type": "project",
     "require": {
+        "firebase/php-jwt": "dev-master"
     }
 }

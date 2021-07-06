@@ -2,15 +2,15 @@ version: '3.3'
 volumes:
   shib-socket:
 services:
-  php:
+  nodejs:
     container_name: app
     build:
-      context: ./app
+      context: ./node-app
       dockerfile: Dockerfile
       args:
         TIMEZONE: ${TIMEZONE}
     volumes:
-      - ${PHP_APP_PATH}:/app
+      - $PWD/node-app:/app
 
   shib-sp3:
     env_file: .env

@@ -6,7 +6,8 @@ RUN ln -snf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime && echo ${TIMEZONE} >
   && printf '[PHP]\ndate.timezone = "%s"\n', ${TIMEZONE} > /usr/local/etc/php/conf.d/tzone.ini \
   && "date"
 
-RUN docker-php-ext-install mysqli
+RUN apt-get update && apt-get install -y libzip-dev
+RUN docker-php-ext-install mysqli zip
 
 RUN echo 'alias sf="php app/console"' >> ~/.bashrc \
   && echo 'alias sf3="php bin/console"' >> ~/.bashrc

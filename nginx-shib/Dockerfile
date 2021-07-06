@@ -21,7 +21,8 @@ FROM nginx
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-    python3 python3-pip python3-wheel python3-setuptools && \
+    python3 python3-pip python3-wheel python3-setuptools \
+    nginx-module-njs && \
     pip3 install wheel awscli --upgrade  \
     && apt-get clean
 

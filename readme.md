@@ -93,3 +93,8 @@ Memcached support is 100% missing.
 The example is really simple.  It'd be nice to have something more complex.
 
 And the big todo is to write up a guide on how to use environment to configure things.  This demo will work as is, but the secrets-entrypoint magic might need some explaining if the containers are going to be useful to others.
+
+
+
+
+

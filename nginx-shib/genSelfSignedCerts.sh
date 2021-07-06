@@ -17,6 +17,7 @@ else
   mkdir -p certs
   output_path=$PWD/certs
 fi
+keyfile_name=${3:-keyfile}
 
 cn=$1
 
@@ -26,7 +27,7 @@ cat <<'CONFIGFILECONTENTS'
 [ req ]
 prompt = no
 default_bits = 2048
-default_keyfile = keyfile.key
+default_keyfile = ${keyfile_name}.key
 encrypt_key = no
 distinguished_name = req_distinguished_name
 
@@ -51,6 +52,6 @@ CONFIGFILECONTENTS
 ## Sometimes, you just need to get things done.  use sed to do variable substitution.
 sed -i "s/{cn}/$cn/g" $output_path/config
 
-openssl req -new -x509 -config $output_path/config -keyout $output_path/keyfile.key -out $output_path/keyfile.crt
+openssl req -new -x509 -config $output_path/config -keyout $output_path/${keyfile_name}.key -out $output_path/${keyfile_name}.crt
 
 openssl dhparam -out $output_path/dhparam.pem 2048
